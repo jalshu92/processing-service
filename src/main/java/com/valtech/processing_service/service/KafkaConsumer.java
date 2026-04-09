@@ -41,6 +41,7 @@ public class KafkaConsumer {
         }
         if(vehicle.getStatus() != VehicleStatus.PENDING) {
             log.error("Vehicle status maybe invalid or already processed");
+            return;
         }
         vehicle.setStatus(VehicleStatus.SUCCESS);
         vehicleService.saveVehicle(vehicle);
