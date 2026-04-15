@@ -25,27 +25,31 @@ public class KafkaConsumer {
     @KafkaListener(topics = "${registration.topic}", groupId = "${{spring.kafka.consumer.group-id}")
     public void consume(Vehicle vehicle) {
         log.info("Consumed message: " + vehicle);
-        List<Vehicle> vehicles = vehicleService.findByEngineNumber(vehicle.getEngineNumber());
-        if(vehicles.isEmpty()) {
-            log.error("Invalid event data. No vehicles found for engine " + vehicle.getEngineNumber());
-            return;
-        }
-        if(vehicles.size() > 1) {
-            log.error("Found multiple vehicles with engine number " + vehicle.getEngineNumber());
-            return;
-        }
         long seconds = Instant.now().getEpochSecond() - vehicle.getRegistrationDate().getEpochSecond();
-        if(seconds > 7*24*60*60) {
-            log.error("Vehicle is registered more than a week ago");
-            return;
-        }
+        List<Vehicle> vehicles = vehicleService.findByEngineNumber(vehicle.getEngineNumber());
         if(vehicle.getStatus() != VehicleStatus.PENDING) {
             log.error("Vehicle status maybe invalid or already processed");
             return;
         }
-        vehicle.setStatus(VehicleStatus.SUCCESS);
-        vehicleService.saveVehicle(vehicle);
-        kafkaProducer.sendMessage(vehicle);
+        else if(vehicles.isEmpty()) {
+            log.error("Invalid event data. No vehicles found for engine " + vehicle.getEngineNumber());
+            return;
+        }
+        else if(vehicles.size() > 1) {
+            log.error("Found multiple vehicles with engine number " + vehicle.getEngineNumber());
+            vehicle.setStatus(VehicleStatus.ERROR);
+        }
+        else if(seconds > 7*24*60*60) {
+            log.error("Vehicle is registered more than a week ago");
+            vehicle.setStatus(VehicleStatus.ERROR);
+        }
+        if(vehicle.getStatus().equals(VehicleStatus.ERROR)) {
+            vehicleService.saveVehicle(vehicle);
+        }
+        else {
+            vehicle.setStatus(VehicleStatus.SUCCESS);
+            vehicleService.saveVehicle(vehicle);
+            kafkaProducer.sendMessage(vehicle);
+        }
     }
-
 }

@@ -13,28 +13,32 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="owner_name")
+    @NotNull(message = "Owner name is required")
+    @Column(name="owner_name",  nullable = false)
     private String ownerName;
 
+    @NotNull(message = "Vehicle number is required")
     @Size(min=10, max=10, message = "Vehicle number must be fixed length of 10")
-    @Column(name="vehicle_number")
+    @Column(name="vehicle_number", nullable = false, unique = true)
     private String vehicleNumber;
 
-    @Column(name="vehicle_type")
+    @NotNull(message = "Vehicle type is required")
+    @Column(name="vehicle_type",  nullable = false)
     private String vehicleType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="status")
+    @Column(name="status", nullable = false)
     private VehicleStatus status;
 
-    @Column(name="created_at")
+    @Column(name="created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name="engine_number")
+    @NotNull(message = "Engine number is required")
+    @Column(name="engine_number", nullable = false)
     private String engineNumber;
 
     @NotNull(message = "Registration date is required")
-    @Column(name="registration_date")
+    @Column(name="registration_date", nullable = false)
     private Instant registrationDate;
 
     public Long getId() {
